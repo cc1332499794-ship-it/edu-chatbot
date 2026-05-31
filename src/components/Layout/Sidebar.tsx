@@ -17,6 +17,7 @@ const Sidebar = () => {
     { path: '/knowledge', label: '📚 ' + t('knowledge') },
     { path: '/settings', label: '⚙️ ' + t('settings') },
     { path: '/help', label: '❓ ' + t('help') },
+    { path: '/upgrade', label: '⭐ Премиум' },
   ];
 
   return (

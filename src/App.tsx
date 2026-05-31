@@ -9,6 +9,9 @@ import HelpPage from './pages/HelpPage';
 import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
 import { useAuthStore } from './store/useAuthStore';
+import UpgradePage from './pages/UpgradePage';
+import SuccessPage from './pages/SuccessPage';
+
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -27,6 +30,9 @@ function App() {
         <Route path="knowledge" element={<KnowledgePage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="help" element={<HelpPage />} />
+        {/* 新增支付相关路由 */}
+        <Route path="upgrade" element={<UpgradePage />} />
+        <Route path="success" element={<SuccessPage />} />
       </Route>
     </Routes>
   );
