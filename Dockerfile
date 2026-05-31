@@ -1,4 +1,4 @@
-# 构建阶段
+# 构建前端
 FROM node:18-alpine AS build
 WORKDIR /app
 COPY package*.json ./
@@ -20,14 +20,11 @@ RUN cd server && npm ci --only=production
 # 复制前端构建产物
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# 复制 Nginx 配置
-COPY nginx.conf /etc/nginx/http.d/default.conf
+# 复制 Nginx 配置到正确位置（Alpine 默认配置目录）
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# 创建启动脚本，同时启动 Nginx 和 Node.js
-RUN echo '#!/bin/sh\n\
-nginx -g "daemon off;" &\n\
-cd /app/server && exec node index.js' > /start.sh && chmod +x /start.sh
-
+# 暴露端口
 EXPOSE 80 3001
 
-CMD ["/start.sh"]
+# 直接使用 shell 命令启动，不使用外部脚本
+CMD sh -c 'nginx -g "daemon off;" & cd /app/server && exec node index.js'
