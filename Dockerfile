@@ -20,11 +20,11 @@ RUN cd server && npm ci --only=production
 # 复制前端构建产物
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# 复制 Nginx 配置到正确位置（Alpine 默认配置目录）
+# 复制 Nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# 暴露端口
-EXPOSE 80 3001
+# 暴露端口（Nginx 80，Node 使用 Render 自动分配的 PORT）
+EXPOSE 80
 
-# 直接使用 shell 命令启动，不使用外部脚本
-CMD sh -c 'nginx -g "daemon off;" & cd /app/server && exec node index.js'
+# 启动命令：后台运行 Nginx，前台运行 Node（使用 Render 提供的 PORT 环境变量）
+CMD sh -c "nginx -g 'daemon off;' & cd /app/server && exec node index.js"

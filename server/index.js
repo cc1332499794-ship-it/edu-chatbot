@@ -1,6 +1,8 @@
 require('dotenv').config();
-console.log('shopId loaded:', process.env.SHOP_ID ? 'YES' : 'NO');
-console.log('secretKey loaded:', process.env.SECRET_KEY ? 'YES' : 'NO');
+console.log('=== ENV CHECK ===');
+console.log('SHOP_ID exists:', !!process.env.SHOP_ID);
+console.log('SECRET_KEY exists:', !!process.env.SECRET_KEY);
+console.log('PORT from env:', process.env.PORT);
 
 require('dotenv').config();
 const express = require('express');
