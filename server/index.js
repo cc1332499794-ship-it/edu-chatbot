@@ -1,4 +1,8 @@
 require('dotenv').config();
+console.log('shopId loaded:', process.env.SHOP_ID ? 'YES' : 'NO');
+console.log('secretKey loaded:', process.env.SECRET_KEY ? 'YES' : 'NO');
+
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
