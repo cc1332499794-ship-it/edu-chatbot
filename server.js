@@ -1,6 +1,6 @@
-import helmet from 'helmet'; 
+import helmet from 'helmet';
 import 'dotenv/config';
-import { Buffer } from 'node:buffer'; 
+import { Buffer } from 'node:buffer';
 import express from 'express';
 import path from 'path';
 import cors from 'cors';
@@ -15,22 +15,37 @@ app.use(express.json());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 配置 CSP（必须放在其他路由之前）
-app.use(
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],  // 允许内联脚本（React 需要）
-      styleSrc: ["'self'", "'unsafe-inline'"],   // 允许内联样式
-      imgSrc: ["'self'", "data:", "https:"],     // 允许图片和 data URI
-      connectSrc: ["'self'", "https://api.yookassa.ru"], // 允许你的支付 API
-      frameAncestors: ["'none'"],                 // 禁止被嵌入 iframe
-      formAction: ["'self'"],
-      baseUri: ["'self'"],
-    },
-  })
-);
+// ------------------- 安全头配置 -------------------
+// 禁用 helmet 默认的 CSP、frameguard 和 X-Powered-By（我们将手动设置）
+app.use(helmet({
+  contentSecurityPolicy: false,
+  frameguard: false,
+  xPoweredBy: false
+}));
 
+// 明确禁止点击劫持
+app.use(helmet.frameguard({ action: 'deny' }));
+
+// 隐藏 Express 标识
+app.use(helmet.hidePoweredBy());
+
+// 手动设置完整 CSP
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy',
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline'; " +
+    "style-src 'self' 'unsafe-inline'; " +
+    "img-src 'self' data:; " +
+    "font-src 'self'; " +
+    "connect-src 'self' https://api.yookassa.ru; " +
+    "frame-ancestors 'none'; " +
+    "form-action 'self'; " +
+    "base-uri 'self'"
+  );
+  next();
+});
+
+// ------------------- 环境变量 & 支付 API -------------------
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 const YOOKASSA_API = 'https://api.yookassa.ru/v3';
 const SHOP_ID = process.env.SHOP_ID;
