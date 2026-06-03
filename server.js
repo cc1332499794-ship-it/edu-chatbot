@@ -1,3 +1,4 @@
+import helmet from 'helmet'; 
 import 'dotenv/config';
 import { Buffer } from 'node:buffer'; 
 import express from 'express';
@@ -14,6 +15,21 @@ app.use(express.json());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// 配置 CSP（必须放在其他路由之前）
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],  // 允许内联脚本（React 需要）
+      styleSrc: ["'self'", "'unsafe-inline'"],   // 允许内联样式
+      imgSrc: ["'self'", "data:", "https:"],     // 允许图片和 data URI
+      connectSrc: ["'self'", "https://api.yookassa.ru"], // 允许你的支付 API
+      frameAncestors: ["'none'"],                 // 禁止被嵌入 iframe
+      formAction: ["'self'"],
+      baseUri: ["'self'"],
+    },
+  })
+);
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 const YOOKASSA_API = 'https://api.yookassa.ru/v3';
