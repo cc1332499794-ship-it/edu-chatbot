@@ -50,6 +50,7 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 const YOOKASSA_API = 'https://api.yookassa.ru/v3';
 const SHOP_ID = process.env.SHOP_ID;
 const SECRET_KEY = process.env.SECRET_KEY;
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY; 
 const shopId = SHOP_ID?.trim();
 const secretKey = SECRET_KEY?.trim();
 console.log('SHOP_ID:', shopId, 'SECRET_KEY начинается с:', secretKey?.substring(0, 8));
@@ -127,6 +128,42 @@ app.get('/api/check-payment/:paymentId', async (req, res) => {
     res.json({ status: payment.status });
   } catch (err) {
     res.status(500).json({ error: 'Ошибка проверки статуса' });
+  }
+});
+
+// ---- 新增 DeepSeek AI 对话 ----
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { messages, subject } = req.body;
+
+    const systemMessage = {
+      role: "system",
+      content: `Ты — образовательный ассистент для студентов. Ты помогаешь изучать математику, физику, историю и программирование. Отвечай кратко и по делу. Если вопрос не по учебной теме, вежливо отказывайся отвечать. Текущий предмет: ${subject || 'общий'}.`
+    };
+
+    const fullMessages = [systemMessage, ...messages];
+
+    const response = await axios.post(
+      'https://api.deepseek.com/v1/chat/completions',
+      {
+        model: 'deepseek-chat',
+        messages: fullMessages,
+        temperature: 0.7,
+        max_tokens: 500,
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    const reply = response.data.choices[0].message.content;
+    res.json({ reply });
+  } catch (error) {
+    console.error('Ошибка DeepSeek:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Ошибка получения ответа от AI' });
   }
 });
 

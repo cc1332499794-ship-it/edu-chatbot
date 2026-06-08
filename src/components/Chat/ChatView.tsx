@@ -33,12 +33,31 @@ const ChatView: React.FC = () => {
   }, [messages]);
 
   const handleSend = async (text: string) => {
-    const userMsg = { id: Date.now().toString(), role: 'user' as const, content: text, timestamp: Date.now() };
-    addMessageToActive(userMsg);
-    const reply = await fetchBotReply(text, subject);
-    const botMsg = { id: (Date.now() + 1).toString(), role: 'bot' as const, content: reply, timestamp: Date.now() };
-    addMessageToActive(botMsg);
+  const userMsg = {
+    id: Date.now().toString(),
+    role: 'user' as const,
+    content: text,
+    timestamp: Date.now(),
   };
+  addMessageToActive(userMsg);
+
+  // 构建对话历史（包括刚发的用户消息）
+  const updatedMessages = [...messages, userMsg];
+  const messagesForApi = updatedMessages.map(m => ({
+    role: m.role,
+    content: m.content,
+  }));
+
+  const reply = await fetchBotReply(messagesForApi, subject);
+
+  const botMsg = {
+    id: (Date.now() + 1).toString(),
+    role: 'bot' as const,
+    content: reply,
+    timestamp: Date.now(),
+  };
+  addMessageToActive(botMsg);
+};
 
   const handleSubjectChange = (newSubject: string) => {
     createNewConversation(newSubject);
