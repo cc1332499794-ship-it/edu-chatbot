@@ -33,11 +33,11 @@ app.use(helmet.hidePoweredBy());
 app.use((req, res, next) => {
   res.setHeader('Content-Security-Policy',
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline'; " +
+    "script-src 'self' 'unsafe-inline' https://mc.yandex.ru; " +
     "style-src 'self' 'unsafe-inline'; " +
     "img-src 'self' data:; " +
     "font-src 'self'; " +
-    "connect-src 'self' https://api.yookassa.ru; " +
+    "connect-src 'self' https://api.yookassa.ru https://open.bigmodel.cn; " +
     "frame-ancestors 'none'; " +
     "form-action 'self'; " +
     "base-uri 'self'"
@@ -50,7 +50,7 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 const YOOKASSA_API = 'https://api.yookassa.ru/v3';
 const SHOP_ID = process.env.SHOP_ID;
 const SECRET_KEY = process.env.SECRET_KEY;
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY; 
+const ZHIPU_API_KEY = process.env.ZHIPU_API_KEY;
 const shopId = SHOP_ID?.trim();
 const secretKey = SECRET_KEY?.trim();
 console.log('SHOP_ID:', shopId, 'SECRET_KEY начинается с:', secretKey?.substring(0, 8));
@@ -131,11 +131,12 @@ app.get('/api/check-payment/:paymentId', async (req, res) => {
   }
 });
 
-// ---- 新增 DeepSeek AI 对话 ----
+// ---- 智谱AI (GLM-4-Flash) 对话 ----
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages, subject } = req.body;
 
+    // 系统提示词（限制在教育领域）
     const systemMessage = {
       role: "system",
       content: `Ты — образовательный ассистент для студентов. Ты помогаешь изучать математику, физику, историю и программирование. Отвечай кратко и по делу. Если вопрос не по учебной теме, вежливо отказывайся отвечать. Текущий предмет: ${subject || 'общий'}.`
@@ -144,16 +145,16 @@ app.post('/api/chat', async (req, res) => {
     const fullMessages = [systemMessage, ...messages];
 
     const response = await axios.post(
-      'https://api.deepseek.com/v1/chat/completions',
+      'https://open.bigmodel.cn/api/paas/v4/chat/completions',
       {
-        model: 'deepseek-chat',
+        model: 'glm-4-flash',   // 免费模型
         messages: fullMessages,
         temperature: 0.7,
         max_tokens: 500,
       },
       {
         headers: {
-          'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+          'Authorization': `Bearer ${ZHIPU_API_KEY}`,
           'Content-Type': 'application/json',
         },
       }
@@ -162,7 +163,7 @@ app.post('/api/chat', async (req, res) => {
     const reply = response.data.choices[0].message.content;
     res.json({ reply });
   } catch (error) {
-    console.error('Ошибка DeepSeek:', error.response?.data || error.message);
+    console.error('Ошибка ZhipuAI:', error.response?.data || error.message);
     res.status(500).json({ error: 'Ошибка получения ответа от AI' });
   }
 });
