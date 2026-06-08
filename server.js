@@ -35,9 +35,9 @@ app.use((req, res, next) => {
     "default-src 'self'; " +
     "script-src 'self' 'unsafe-inline' https://mc.yandex.ru; " +
     "style-src 'self' 'unsafe-inline'; " +
-    "img-src 'self' data:; " +
+    "img-src 'self' data: https://mc.yandex.ru; " +
     "font-src 'self'; " +
-    "connect-src 'self' https://api.yookassa.ru https://open.bigmodel.cn; " +
+    "connect-src 'self' https://api.yookassa.ru https://open.bigmodel.cn https://mc.yandex.ru wss://mc.yandex.ru; " +
     "frame-ancestors 'none'; " +
     "form-action 'self'; " +
     "base-uri 'self'"
@@ -142,12 +142,16 @@ app.post('/api/chat', async (req, res) => {
       content: `Ты — образовательный ассистент для студентов. Ты помогаешь изучать математику, физику, историю и программирование. Отвечай кратко и по делу. Если вопрос не по учебной теме, вежливо отказывайся отвечать. Текущий предмет: ${subject || 'общий'}.`
     };
 
-    const fullMessages = [systemMessage, ...messages];
+    // 确保消息角色符合智谱API规范（'user' / 'assistant' / 'system'）
+    const fullMessages = [systemMessage, ...messages.map(m => ({
+      role: m.role === 'bot' ? 'assistant' : m.role,
+      content: m.content
+    }))];
 
     const response = await axios.post(
       'https://open.bigmodel.cn/api/paas/v4/chat/completions',
       {
-        model: 'glm-4-flash',   // 免费模型
+        model: 'glm-4-flash',
         messages: fullMessages,
         temperature: 0.7,
         max_tokens: 500,
